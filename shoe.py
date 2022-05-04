@@ -3,15 +3,15 @@
 # @Author : PRQ
 # @File :shoe.py
 
+import csv
 import requests
 import json
-from win32com.client import Dispatch
 
-excel = Dispatch('Excel.Application')
-book = excel.Workbooks.Open('shoe.xlsx')
-sheet = book.Worksheets('shoe')
-row = sheet.UsedRange.Rows.Count
-
+with open('LN.csv', 'w') as f:
+    csv_write = csv.writer(f)
+    colName = ['title', 'MPrice', 'SPrice', 'SPUid', 'link', 'imgLink']
+    csv_write.writerow(colName)
+    f.close()
 
 headers = {
     "accept": "*/*",
@@ -39,53 +39,42 @@ url = "https://api.store.lining.com/goodsg/v1/goods-jh-query/search/lining/list/
 
 shoes = {"男鞋": ['跑步鞋', '篮球鞋', '运动生活鞋', '训练鞋', '羽毛球鞋', '户外鞋', '凉鞋/拖鞋'],
          "女鞋": ['跑步鞋', '篮球鞋', '运动生活鞋', '训练鞋', '羽毛球鞋', '凉鞋/拖鞋']}
-for shoe in shoes.keys():
-    for item in shoes[shoe]:
-        get = True
-        pageSize = 50
-        pageNum = 1
-        while get:
-            data = {"source": "4", "saasId": "8324992625302181585", "pageNum": pageNum, "pageSize": pageSize,
-                    "field": 'null',
-                    "sortBy": 1, "query": "", "filter": {"tagsInfo": {
-                    "customTag": [{"tagName": "firstCategory", "tagValue": ["运动鞋"]},
-                                  {"tagName": "secondCategory", "tagValue": [shoe]},
-                                  {"tagName": "thirdCategory", "tagValue": [item]}]}}}
-            r = requests.post(url, headers=headers, data=json.dumps(data))
-            info = json.loads(r.content.decode('utf-8'))
-            dataList = info['data']['dataList']
-            if len(dataList) < pageSize:
-                get = False
-            elif len(dataList) == 0:
-                break
-            else:
-                pageNum += 1
-            for i in range(len(dataList)):
-                spuID = dataList[i]['spuId']
-                title = dataList[i]['title']
-                imgLink = dataList[i]['primaryImage']
-                link = "https://store.lining.com/goods/detail?spuId=" + spuID
-                MarketPrice = dataList[i]['spuPrice']['maxMarketPrice']
-                SalePrice = dataList[i]['spuPrice']['minSalePrice']
-                about = dataList[i]['spuVOList']
-                sheet.Cells(row + 1, 1).Value = title
-                sheet.Cells(row + 1, 2).Value = MarketPrice
-                sheet.Cells(row + 1, 3).Value = SalePrice
-                sheet.Cells(row + 1, 4).Value = spuID
-                sheet.Cells(row + 1, 5).Value = link
-                sheet.Cells(row + 1, 6).Value = imgLink
-                row = row+1
-                for j in about:
-                    if j['spuId'] == spuID:
-                        continue
-                    else:
-                        sheet.Cells(row + 1, 1).Value = title
-                        sheet.Cells(row + 1, 2).Value = MarketPrice
-                        sheet.Cells(row + 1, 3).Value = SalePrice
-                        sheet.Cells(row + 1, 4).Value = j['spuId']
-                        sheet.Cells(row + 1, 5).Value = "https://store.lining.com/goods/detail?spuId="+j['spuId']
-                        sheet.Cells(row + 1, 6).Value = j['primaryImage']
-                        row = row + 1
-                book.Save()
-book.Close()
-excel.Quit()
+with open('LN.csv', 'a') as f:
+    csv_write = csv.writer(f)
+    for shoe in shoes.keys():
+        for item in shoes[shoe]:
+            get = True
+            pageSize = 50
+            pageNum = 1
+            while get:
+                data = {"source": "4", "saasId": "8324992625302181585", "pageNum": pageNum, "pageSize": pageSize,
+                        "field": 'null',
+                        "sortBy": 1, "query": "", "filter": {"tagsInfo": {
+                        "customTag": [{"tagName": "firstCategory", "tagValue": ["运动鞋"]},
+                                      {"tagName": "secondCategory", "tagValue": [shoe]},
+                                      {"tagName": "thirdCategory", "tagValue": [item]}]}}}
+                r = requests.post(url, headers=headers, data=json.dumps(data))
+                info = json.loads(r.content.decode('utf-8'))
+                dataList = info['data']['dataList']
+                if len(dataList) < pageSize:
+                    get = False
+                elif len(dataList) == 0:
+                    break
+                else:
+                    pageNum += 1
+                for i in range(len(dataList)):
+                    spuID = dataList[i]['spuId']
+                    title = dataList[i]['title']
+                    imgLink = dataList[i]['primaryImage']
+                    link = "https://store.lining.com/goods/detail?spuId=" + spuID
+                    MarketPrice = dataList[i]['spuPrice']['maxMarketPrice']
+                    SalePrice = dataList[i]['spuPrice']['minSalePrice']
+                    about = dataList[i]['spuVOList']
+                    csv_write.writerow([title, MarketPrice, SalePrice, spuID, link, imgLink])
+                    for j in about:
+                        if j['spuId'] == spuID:
+                            continue
+                        else:
+                            csv_write.writerow([title, MarketPrice, SalePrice, j['spuId'],
+                                                    "https://store.lining.com/goods/detail?spuId=" + j['spuId'], j['primaryImage']])
+    f.close()
