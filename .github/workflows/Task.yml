@@ -28,7 +28,7 @@ jobs:
         pip install requests
     - name: delete csv
       run: |
-        rm -rf ./LN.csv
+        rm -f LN.csv
     - name: get skins
       run: | 
         echo `date -d'+8 hours' +%Y-%m-%d/%H:%M:%S` delete and get new shoes>> do_time.log
