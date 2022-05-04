@@ -4,7 +4,6 @@
 # @File :shoe.py
 
 import requests
-import os
 import json
 from win32com.client import Dispatch
 
@@ -13,8 +12,6 @@ book = excel.Workbooks.Open('shoe.xlsx')
 sheet = book.Worksheets('shoe')
 row = sheet.UsedRange.Rows.Count
 
-os.environ["http_proxy"] = "http://proxy.bmcc.com.cn:18765"
-os.environ["https_proxy"] = "http://proxy.bmcc.com.cn:18765"
 
 headers = {
     "accept": "*/*",
